@@ -1,11 +1,7 @@
 import graphql
 import pytest
 
-from dls_graphql_ws.protocol import (
-    GQLMsgType,
-    OperationMessage,
-    OperationMessagePayload,
-)
+from graphql_ws.protocol import GQLMsgType, OperationMessage, OperationMessagePayload
 
 # pylint: disable=R0201, no-self-use
 

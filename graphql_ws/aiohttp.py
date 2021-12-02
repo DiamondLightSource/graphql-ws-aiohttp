@@ -2,8 +2,8 @@ from typing import Optional
 
 from aiohttp import WSMsgType, web
 
-from dls_graphql_ws.abc import AbstractConnectionContext
-from dls_graphql_ws.server import ConnectionClosed
+from graphql_ws.abc import AbstractConnectionContext
+from graphql_ws.server import ConnectionClosed
 
 
 class AiohttpConnectionContext(AbstractConnectionContext):

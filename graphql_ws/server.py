@@ -5,8 +5,8 @@ from typing import Any, Dict, Optional, Type
 
 import graphql
 
-from dls_graphql_ws.abc import AbstractConnectionContext
-from dls_graphql_ws.protocol import (
+from graphql_ws.abc import AbstractConnectionContext
+from graphql_ws.protocol import (
     WS_INTERNAL_ERROR,
     GQLMsgType,
     OperationMessage,

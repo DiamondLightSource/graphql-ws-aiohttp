@@ -5,9 +5,9 @@ import aiohttp.test_utils
 import pytest
 from aiohttp import web
 
-from dls_graphql_ws.aiohttp import AiohttpConnectionContext
-from dls_graphql_ws.protocol import WS_PROTOCOL, GQLMsgType
-from dls_graphql_ws.server import SubscriptionServer
+from graphql_ws.aiohttp import AiohttpConnectionContext
+from graphql_ws.protocol import WS_PROTOCOL, GQLMsgType
+from graphql_ws.server import SubscriptionServer
 
 from .common import schema
 

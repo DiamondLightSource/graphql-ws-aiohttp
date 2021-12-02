@@ -2,8 +2,8 @@ import asyncio
 import json
 import typing
 
-from dls_graphql_ws.abc import AbstractConnectionContext
-from dls_graphql_ws.server import ConnectionClosed
+from graphql_ws.abc import AbstractConnectionContext
+from graphql_ws.server import ConnectionClosed
 
 CLOSED = "__CLOSED__"
 

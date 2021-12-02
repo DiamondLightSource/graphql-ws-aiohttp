@@ -4,12 +4,12 @@ from unittest.mock import Mock
 
 import pytest
 
-from dls_graphql_ws.protocol import GQLMsgType
-from dls_graphql_ws.server import ConnectionClosed, SubscriptionServer
-from dls_graphql_ws.testing import CLOSED
-from dls_graphql_ws.testing import TestConnectionContext as _TestConnectionContext
-from dls_graphql_ws.testing import TestWebsocket as _TestWebsocket
-from dls_graphql_ws.testing import TestWebsocketTransport as _TestWebsocketTransport
+from graphql_ws.protocol import GQLMsgType
+from graphql_ws.server import ConnectionClosed, SubscriptionServer
+from graphql_ws.testing import CLOSED
+from graphql_ws.testing import TestConnectionContext as _TestConnectionContext
+from graphql_ws.testing import TestWebsocket as _TestWebsocket
+from graphql_ws.testing import TestWebsocketTransport as _TestWebsocketTransport
 
 from .common import AsyncMock, schema
 

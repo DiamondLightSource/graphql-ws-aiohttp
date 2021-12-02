@@ -7,9 +7,9 @@ from unittest.mock import Mock
 import graphql
 import pytest
 
-from dls_graphql_ws.abc import AbstractConnectionContext
-from dls_graphql_ws.protocol import WS_INTERNAL_ERROR, GQLMsgType
-from dls_graphql_ws.server import ConnectionClosed, SubscriptionServer, close_cancelling
+from graphql_ws.abc import AbstractConnectionContext
+from graphql_ws.protocol import WS_INTERNAL_ERROR, GQLMsgType
+from graphql_ws.server import ConnectionClosed, SubscriptionServer, close_cancelling
 
 from .common import AsyncMock, schema
 
