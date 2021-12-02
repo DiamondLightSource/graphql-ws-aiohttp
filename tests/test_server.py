@@ -6,13 +6,9 @@ from unittest.mock import Mock
 import graphql
 import pytest
 
-from graphql_ws.abc import AbstractConnectionContext
-from graphql_ws.protocol import WS_INTERNAL_ERROR, GQLMsgType
-from graphql_ws.server import (
-    SubscriptionServer,
-    ConnectionClosed,
-    close_cancelling,
-)
+from dls_graphql_ws.abc import AbstractConnectionContext
+from dls_graphql_ws.protocol import WS_INTERNAL_ERROR, GQLMsgType
+from dls_graphql_ws.server import ConnectionClosed, SubscriptionServer, close_cancelling
 
 from .common import AsyncMock, schema
 
@@ -72,9 +68,9 @@ class TestCloseCancelling:
         task = asyncio.ensure_future(run())
         for i in range(5):
             await queue.put(i)
-            await asyncio.sleep(.01)
+            await asyncio.sleep(0.01)
         await wrapped.aclose()
-        await asyncio.sleep(.01)
+        await asyncio.sleep(0.01)
 
         assert received == list(range(5))
         assert agen_finalized
@@ -105,7 +101,7 @@ class TestCloseCancelling:
             completed = True
 
         task = asyncio.ensure_future(run())
-        await asyncio.sleep(.01)
+        await asyncio.sleep(0.01)
 
         assert received == [1]
         assert agen_finalized
@@ -166,10 +162,10 @@ class TestSubscriptionServer:
 
         server._handle = Mock(side_effect=se_handle)
         task = asyncio.ensure_future(server.handle(ws, context_value))
-        await asyncio.sleep(.01)
+        await asyncio.sleep(0.01)
 
         task.cancel()
-        await asyncio.sleep(.01)
+        await asyncio.sleep(0.01)
         assert not _handle_task.cancelled()
 
         # cleanup
@@ -186,12 +182,12 @@ class TestSubscriptionServer:
             conn_context[OP_ID] = mock_op
 
         task = asyncio.ensure_future(server._handle(conn_context))
-        await asyncio.sleep(.01)
+        await asyncio.sleep(0.01)
 
         server.on_open.assert_called_once_with(conn_context)
 
         conn_context.receive_queue.put_nowait(DummyConnectionContext.CLOSED)
-        await asyncio.sleep(.01)
+        await asyncio.sleep(0.01)
         server.on_close.assert_called_once_with(conn_context)
 
         if has_operations:
@@ -220,9 +216,7 @@ class TestSubscriptionServer:
         "error_type", [GQLMsgType.ERROR, GQLMsgType.CONNECTION_ERROR, None]
     )
     async def test_send_error(self, server, conn_context, error_type):
-        await server.send_error(
-            conn_context, OP_ID, Exception("test"), error_type
-        )
+        await server.send_error(conn_context, OP_ID, Exception("test"), error_type)
         assert conn_context.send_queue.qsize() == 1
 
         msg = conn_context.send_queue.get_nowait()
@@ -270,8 +264,9 @@ class TestSubscriptionServer:
                     {
                         "message": "test message",
                         "locations": [
-                            {"line": 1, "column": 15}, 
-                            {"line": 1, "column": 20}],
+                            {"line": 1, "column": 15},
+                            {"line": 1, "column": 20},
+                        ],
                         "path": ERROR.path,
                         "extensions": ERROR.extensions,
                     }
@@ -287,9 +282,7 @@ class TestSubscriptionServer:
 
         await server.unsubscribe(conn_context, OP_ID)
 
-        server.on_operation_complete.assert_called_once_with(
-            conn_context, OP_ID
-        )
+        server.on_operation_complete.assert_called_once_with(conn_context, OP_ID)
         agen_mock.aclose.assert_called_once_with()
 
     @pytest.mark.asyncio
@@ -333,20 +326,17 @@ class TestSubscriptionServer:
             pytest.param(
                 object(),
                 TypeError(
-                    "the JSON object must be str, bytes or bytearray, "
-                    "not object"
+                    "the JSON object must be str, bytes or bytearray, " "not object"
                 ),
             ),
             pytest.param("[1234]", TypeError("Message must be an object")),
             pytest.param("{}", ValueError("None is not a valid GQLMsgType")),
         ],
     )
-    async def test_on_message__bad_message(
-        self, server, conn_context, message, exc
-    ):
+    async def test_on_message__bad_message(self, server, conn_context, message, exc):
         server.send_error = AsyncMock()
         task = asyncio.ensure_future(server.on_message(conn_context, message))
-        await asyncio.sleep(.01)
+        await asyncio.sleep(0.01)
 
         assert server.send_error.call_count == 1
         call_args = server.send_error.call_args[0]
@@ -357,12 +347,8 @@ class TestSubscriptionServer:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(("raises"), (True, False))
-    async def test_on_message__connection_init(
-        self, server, conn_context, raises
-    ):
-        message = dict(
-            type=GQLMsgType.CONNECTION_INIT.value, payload={"test": "data"}
-        )
+    async def test_on_message__connection_init(self, server, conn_context, raises):
+        message = dict(type=GQLMsgType.CONNECTION_INIT.value, payload={"test": "data"})
         if raises:
             server.on_connect = Mock(side_effect=Exception("test"))
 
@@ -391,9 +377,7 @@ class TestSubscriptionServer:
             "type": GQLMsgType.START.value,
             "id": OP_ID,
             "payload": {
-                "query": (
-                    "query getName($title: String!) { name(title: $title) }"
-                ),
+                "query": ("query getName($title: String!) { name(title: $title) }"),
                 "operationName": "getName",
                 "variables": {"title": "Mr."},
             },
@@ -429,7 +413,7 @@ class TestSubscriptionServer:
         task = asyncio.ensure_future(
             server.on_message(conn_context, json.dumps(message))
         )
-        await asyncio.sleep(.01)
+        await asyncio.sleep(0.01)
         assert OP_ID in conn_context
 
         for i in range(5):
@@ -449,7 +433,7 @@ class TestSubscriptionServer:
         }
 
         # operation is closed, now close the connection
-        await asyncio.sleep(.01)
+        await asyncio.sleep(0.01)
         assert OP_ID not in conn_context
         assert task.done() and not task.cancelled() and not task.exception()
 
@@ -487,26 +471,26 @@ class TestSubscriptionServer:
         start_task1 = asyncio.ensure_future(
             server.on_message(conn_context, json.dumps(start_message))
         )
-        await asyncio.sleep(.01)
+        await asyncio.sleep(0.01)
         assert OP_ID in conn_context
         start_task1_asyncgen = conn_context[OP_ID]
 
         start_task2 = asyncio.ensure_future(
             server.on_message(conn_context, json.dumps(start_message))
         )
-        await asyncio.sleep(.01)
+        await asyncio.sleep(0.01)
         assert OP_ID in conn_context
         start_task2_asyncgen = conn_context[OP_ID]
 
         assert start_task1_asyncgen != start_task2_asyncgen
-        await asyncio.sleep(.1)
+        await asyncio.sleep(0.1)
 
         assert start_task1.done() and start_task1.cancelled()
         assert not start_task2.done()
 
         assert not conn_context.send_queue.qsize()
         start_task2.cancel()
-        await asyncio.sleep(.01)
+        await asyncio.sleep(0.01)
 
         # anext() in graphql_core_next's map_async_iterator hangs until gc.
         gc.collect()
@@ -533,7 +517,7 @@ class TestSubscriptionServer:
         start_task = asyncio.ensure_future(
             server.on_message(conn_context, json.dumps(start_message))
         )
-        await asyncio.sleep(.01)
+        await asyncio.sleep(0.01)
         assert OP_ID in conn_context
 
         stop_message = {"type": GQLMsgType.STOP.value, "id": OP_ID}
@@ -541,7 +525,7 @@ class TestSubscriptionServer:
             server.on_message(conn_context, json.dumps(stop_message))
         )
 
-        await asyncio.sleep(.01)
+        await asyncio.sleep(0.01)
         assert stop_task.done() and not stop_task.cancelled()
         assert start_task.done() and start_task.cancelled()
         # anext() in graphql_core_next's map_async_iterator hangs until gc.

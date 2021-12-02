@@ -4,14 +4,12 @@ from unittest.mock import Mock
 
 import pytest
 
-from graphql_ws.protocol import GQLMsgType
-from graphql_ws.server import ConnectionClosed, SubscriptionServer
-from graphql_ws.testing import (
-    CLOSED,
-    TestConnectionContext as _TestConnectionContext,
-    TestWebsocket as _TestWebsocket,
-    TestWebsocketTransport as _TestWebsocketTransport,
-)
+from dls_graphql_ws.protocol import GQLMsgType
+from dls_graphql_ws.server import ConnectionClosed, SubscriptionServer
+from dls_graphql_ws.testing import CLOSED
+from dls_graphql_ws.testing import TestConnectionContext as _TestConnectionContext
+from dls_graphql_ws.testing import TestWebsocket as _TestWebsocket
+from dls_graphql_ws.testing import TestWebsocketTransport as _TestWebsocketTransport
 
 from .common import AsyncMock, schema
 
@@ -117,7 +115,7 @@ class TestTestConnectionContext:
     async def test_close(self, connection_context):
         fut = asyncio.ensure_future(connection_context.receive())
         await connection_context.close(1011)
-        await asyncio.sleep(.01)
+        await asyncio.sleep(0.01)
         assert connection_context.closed
         assert fut.exception() and isinstance(fut.exception(), ConnectionClosed)
 
@@ -152,15 +150,13 @@ class TestIntegration:
             await server.handle(ws, context)
 
         fut = asyncio.ensure_future(handle(transport.server))
-        await asyncio.sleep(.01)
+        await asyncio.sleep(0.01)
 
         message = {
             "type": GQLMsgType.START.value,
             "id": "0",
             "payload": {
-                "query": (
-                    "query getName($title: String!) { name(title: $title) }"
-                ),
+                "query": ("query getName($title: String!) { name(title: $title) }"),
                 "operationName": "getName",
                 "variables": {"title": "Mr."},
             },
@@ -175,7 +171,7 @@ class TestIntegration:
         }
 
         await transport.client.send(CLOSED)
-        await asyncio.sleep(.01)
+        await asyncio.sleep(0.01)
 
         assert fut.done() and not fut.cancelled() and not fut.exception()
 
@@ -187,7 +183,7 @@ class TestIntegration:
             await server.handle(ws, context)
 
         fut = asyncio.ensure_future(handle(transport.server))
-        await asyncio.sleep(.01)
+        await asyncio.sleep(0.01)
 
         message = {
             "type": GQLMsgType.START.value,
@@ -222,5 +218,5 @@ class TestIntegration:
 
         # operation is closed, now close the connection
         await transport.client.send(CLOSED)
-        await asyncio.sleep(.01)
+        await asyncio.sleep(0.01)
         assert fut.done() and not fut.cancelled() and not fut.exception()

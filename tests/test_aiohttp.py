@@ -1,13 +1,13 @@
 import asyncio
 import json
 
-from aiohttp import web
 import aiohttp.test_utils
 import pytest
+from aiohttp import web
 
-from graphql_ws.server import SubscriptionServer
-from graphql_ws.aiohttp import AiohttpConnectionContext
-from graphql_ws.protocol import WS_PROTOCOL, GQLMsgType
+from dls_graphql_ws.aiohttp import AiohttpConnectionContext
+from dls_graphql_ws.protocol import WS_PROTOCOL, GQLMsgType
+from dls_graphql_ws.server import SubscriptionServer
 
 from .common import schema
 
@@ -80,7 +80,7 @@ class TestAiohttpConnectionContext:
 
         async with hotpath(handle) as cwsr:
             event.set()
-            await asyncio.sleep(.01)
+            await asyncio.sleep(0.01)
             await cwsr.close()
 
     @pytest.mark.asyncio
@@ -116,9 +116,7 @@ class TestIntegration:
                 "type": GQLMsgType.START.value,
                 "id": "0",
                 "payload": {
-                    "query": (
-                        "query getName($title: String!) { name(title: $title) }"
-                    ),
+                    "query": ("query getName($title: String!) { name(title: $title) }"),
                     "operationName": "getName",
                     "variables": {"title": "Mr."},
                 },
@@ -166,9 +164,7 @@ class TestIntegration:
                 assert resp == {
                     "id": "0",
                     "type": GQLMsgType.DATA.value,
-                    "payload": {
-                        "data": {"counter": f"{i} :: subscribeCounter"}
-                    },
+                    "payload": {"data": {"counter": f"{i} :: subscribeCounter"}},
                 }
 
             context["event"].set()

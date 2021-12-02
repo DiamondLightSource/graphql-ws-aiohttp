@@ -1,6 +1,6 @@
 import asyncio
-from datetime import datetime
 import json
+from datetime import datetime
 
 from aiohttp import web
 from graphql import (
@@ -12,10 +12,9 @@ from graphql import (
     graphql,
 )
 
-import graphql_ws
-from graphql_ws.aiohttp import AiohttpConnectionContext
-
+import dls_graphql_ws
 from demo.graphiql_template import make_template
+from dls_graphql_ws.aiohttp import AiohttpConnectionContext
 
 
 def resolve_time(root, info):
@@ -31,19 +30,11 @@ async def subscribe_time(root, info):
 schema = GraphQLSchema(
     query=GraphQLObjectType(
         "RootQueryType",
-        {
-            "time": GraphQLField(
-                GraphQLNonNull(GraphQLString), resolve=resolve_time
-            )
-        },
+        {"time": GraphQLField(GraphQLNonNull(GraphQLString), resolve=resolve_time)},
     ),
     subscription=GraphQLObjectType(
         "RootSubscriptionType",
-        {
-            "time": GraphQLField(
-                GraphQLNonNull(GraphQLString), subscribe=subscribe_time
-            )
-        },
+        {"time": GraphQLField(GraphQLNonNull(GraphQLString), subscribe=subscribe_time)},
     ),
 )
 
@@ -53,7 +44,7 @@ async def handle_root(request):
 
 
 async def handle_subscriptions(request):
-    wsr = web.WebSocketResponse(protocols=(graphql_ws.WS_PROTOCOL,))
+    wsr = web.WebSocketResponse(protocols=(dls_graphql_ws.WS_PROTOCOL,))
     request.app["websockets"].add(wsr)
     await wsr.prepare(request)
     await request.app["subscription_server"].handle(wsr, None)
@@ -98,7 +89,7 @@ def make_app():
     app.router.add_post("/graphql", handle_graphql)
     app.router.add_get("/subscriptions", handle_subscriptions)
 
-    app["subscription_server"] = graphql_ws.SubscriptionServer(
+    app["subscription_server"] = dls_graphql_ws.SubscriptionServer(
         schema, AiohttpConnectionContext
     )
     app["websockets"] = set()

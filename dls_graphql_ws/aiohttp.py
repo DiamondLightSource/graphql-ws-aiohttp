@@ -1,7 +1,7 @@
 from aiohttp import WSMsgType, web
 
-from graphql_ws.abc import AbstractConnectionContext
-from graphql_ws.server import ConnectionClosed
+from dls_graphql_ws.abc import AbstractConnectionContext
+from dls_graphql_ws.server import ConnectionClosed
 
 
 class AiohttpConnectionContext(AbstractConnectionContext):

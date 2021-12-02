@@ -4,8 +4,8 @@ import typing
 
 import graphql
 
-from graphql_ws.abc import AbstractConnectionContext
-from graphql_ws.protocol import (
+from dls_graphql_ws.abc import AbstractConnectionContext
+from dls_graphql_ws.protocol import (
     WS_INTERNAL_ERROR,
     GQLMsgType,
     OperationMessage,

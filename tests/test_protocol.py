@@ -1,10 +1,10 @@
 import graphql
 import pytest
 
-from graphql_ws.protocol import (
+from dls_graphql_ws.protocol import (
+    GQLMsgType,
     OperationMessage,
     OperationMessagePayload,
-    GQLMsgType,
 )
 
 # pylint: disable=R0201, no-self-use
@@ -107,20 +107,14 @@ class TestOperationMessage:
         [
             pytest.param(
                 1234,
-                TypeError(
-                    "the JSON object must be str, bytes or bytearray, not int"
-                ),
+                TypeError("the JSON object must be str, bytes or bytearray, not int"),
                 id="invalid_json",
             ),
             pytest.param(
-                "[]",
-                TypeError("Message must be an object"),
-                id="non_dict_message",
+                "[]", TypeError("Message must be an object"), id="non_dict_message",
             ),
             pytest.param(
-                "{}",
-                ValueError("None is not a valid GQLMsgType"),
-                id="missing_type",
+                "{}", ValueError("None is not a valid GQLMsgType"), id="missing_type",
             ),
             pytest.param(
                 '{"type": "start", "payload": []}',
