@@ -16,9 +16,7 @@ def resolve_name(root: None, info: graphql.GraphQLResolveInfo, title: str):
     return f"{title} {name} :: {op_name}"
 
 
-async def subscribe_counter(
-    root: None, info: graphql.GraphQLResolveInfo, ceil: int
-):
+async def subscribe_counter(root: None, info: graphql.GraphQLResolveInfo, ceil: int):
     # pylint: disable=W0613, unused-argument
     i = 0
     while i < ceil:

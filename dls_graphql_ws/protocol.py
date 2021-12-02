@@ -120,9 +120,7 @@ class OperationMessage:
         if not isinstance(data, dict):
             raise TypeError("Message must be an object")
         return cls(
-            type=data.get("type"),
-            id=data.get("id"),
-            payload=data.get("payload"),
+            type=data.get("type"), id=data.get("id"), payload=data.get("payload"),
         )
 
     @classmethod

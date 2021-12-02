@@ -1,6 +1,7 @@
 import asyncio
-from graphql.subscription.map_async_iterator import MapAsyncIterator
+
 import pytest
+from graphql.subscription.map_async_iterator import MapAsyncIterator
 
 
 @pytest.mark.asyncio
@@ -26,15 +27,15 @@ async def test():
             received.append(i)
 
     task = asyncio.ensure_future(run())
-    await asyncio.sleep(.01)
+    await asyncio.sleep(0.01)
 
     for i in range(5):
         await queue.put(i)
-        await asyncio.sleep(.01)
+        await asyncio.sleep(0.01)
 
     assert received == list(range(5))
 
     await mai.aclose()
-    await asyncio.sleep(.01)
+    await asyncio.sleep(0.01)
     assert agen_closed
     assert task.done()

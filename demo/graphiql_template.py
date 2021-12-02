@@ -150,8 +150,7 @@ graphiql_template = string.Template(
 
 
 def make_template(
-    graphiql_version: str = "0.11.11",
-    subscriptions_transport_version: str = "0.7.0",
+    graphiql_version: str = "0.11.11", subscriptions_transport_version: str = "0.7.0",
 ) -> str:
     return graphiql_template.substitute(
         graphiql_version=graphiql_version,

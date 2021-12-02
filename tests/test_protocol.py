@@ -39,7 +39,7 @@ class TestOperationMessagePayload:
                 True,
                 id="subscription",
             ),
-            pytest.param(None, graphql.Source(None), None, False, id="missing"),
+            pytest.param(None, graphql.Source(""), None, False, id="missing"),
         ],
     )
     def test_parsing(self, raw, source, document, has_subscription_operation):
