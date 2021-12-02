@@ -4,10 +4,10 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-dls-graphql-ws = {editable = true, extras = ["dev"], path = "."}
+graphql-ws-aiohttp = {editable = true, extras = ["dev"], path = "."}
 
 [packages]
-dls-graphql-ws = {editable = true, path = "."}
+graphql-ws-aiohttp = {editable = true, path = "."}
 
 [scripts]
 tests = "python -m pytest"
