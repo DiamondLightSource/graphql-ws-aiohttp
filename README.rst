@@ -3,6 +3,8 @@ dls-graphql-ws
 
 |code_ci| |coverage| |pypi_version| |license|
 
+Port of `graphql-ws-next`_ for `graphql-core v3`_.
+
 A GraphQL WebSocket server and client to facilitate GraphQL queries, mutations and subscriptions over WebSocket (for Python 3.6+).
 This code is based on the current implementation of `subscriptions-transport-ws <https://github.com/apollographql/subscriptions-transport-ws>`_.
 
@@ -106,6 +108,8 @@ License
 =======
 This package is licensed under the MIT License.
 
+.. _`graphql-ws-next`: https://github.com/dfee/graphql-ws-next
+.. _`graphql-core v3`: https://github.com/graphql-python/graphql-core
 
 .. |code_ci| image:: https://github.com/dls-controls/dls-graphql-ws/workflows/Code%20CI/badge.svg?branch=master
     :target: https://github.com/dls-controls/dls-graphql-ws/actions?query=workflow%3A%22Code+CI%22
