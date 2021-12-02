@@ -70,6 +70,11 @@ class TestCloseCancelling:
         for i in range(5):
             await queue.put(i)
             await asyncio.sleep(0.01)
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
         await wrapped.aclose()
         await asyncio.sleep(0.01)
 
