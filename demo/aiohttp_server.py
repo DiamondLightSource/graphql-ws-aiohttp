@@ -1,6 +1,7 @@
 import asyncio
 import json
 from datetime import datetime
+from typing import Any, Dict
 
 from aiohttp import web
 from graphql import (
@@ -56,7 +57,7 @@ async def handle_graphql(request: web.Request) -> web.Response:
     response = web.Response(content_type="application/json")
 
     content_type = request.content_type
-    req_payload = dict()
+    req_payload: Dict[str, Any] = dict()
     if content_type == "application/graphql":
         req_payload.update(query=await request.text())
     elif content_type == "application/json":
@@ -69,12 +70,12 @@ async def handle_graphql(request: web.Request) -> web.Response:
 
     result = await graphql(
         schema,
-        source=req_payload.get("query"),
+        source=req_payload.get("query"),  # type: ignore
         variable_values=req_payload.get("variables"),
         operation_name=req_payload.get("operationName"),
     )
 
-    res_payload = dict(data=result.data)
+    res_payload: Dict[str, Any] = dict(data=result.data)
     if result.errors:
         res_payload["errors"] = [error.formatted for error in result.errors]
 

@@ -7,7 +7,7 @@ import typing
 class AbstractConnectionContext(collections.abc.MutableMapping):
     ws: typing.Any
     context_value: typing.Any
-    tasks = typing.Set[asyncio.Task]
+    tasks: typing.Set[asyncio.Task]
     _operations: typing.Dict[str, typing.AsyncIterator]
 
     def __init__(self, ws, context_value=None):
@@ -41,7 +41,7 @@ class AbstractConnectionContext(collections.abc.MutableMapping):
         pass
 
     @abc.abstractmethod
-    def receive(self) -> str:
+    async def receive(self) -> str:
         pass
 
     @abc.abstractmethod

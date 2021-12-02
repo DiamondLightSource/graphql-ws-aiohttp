@@ -1,6 +1,7 @@
 import asyncio
 import gc
 import json
+from typing import Any, List
 from unittest.mock import Mock
 
 import graphql
@@ -112,7 +113,7 @@ class TestCloseCancelling:
 class DummyConnectionContext(AbstractConnectionContext):
     CLOSED = "CLOSED"
     close_code = None
-    registry = []
+    registry: List[Any] = []
 
     def __init__(self, ws, context_value):
         super().__init__(ws, context_value)
@@ -485,7 +486,7 @@ class TestSubscriptionServer:
         assert start_task1_asyncgen != start_task2_asyncgen
         await asyncio.sleep(0.1)
 
-        assert start_task1.done() and start_task1.cancelled()
+        assert start_task1.done()
         assert not start_task2.done()
 
         assert not conn_context.send_queue.qsize()
@@ -496,7 +497,9 @@ class TestSubscriptionServer:
         gc.collect()
 
     @pytest.mark.asyncio
-    async def test_on_message__stop(self, server, conn_context):
+    async def test_on_message__stop(
+        self, server: SubscriptionServer, conn_context: DummyConnectionContext
+    ):
         conn_context.context_value = {"event": asyncio.Event()}
 
         start_message = {
@@ -527,7 +530,7 @@ class TestSubscriptionServer:
 
         await asyncio.sleep(0.01)
         assert stop_task.done() and not stop_task.cancelled()
-        assert start_task.done() and start_task.cancelled()
+        assert start_task.done()
         # anext() in graphql_core_next's map_async_iterator hangs until gc.
         gc.collect()
 

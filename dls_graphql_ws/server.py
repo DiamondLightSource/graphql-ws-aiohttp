@@ -1,6 +1,7 @@
 import asyncio
 import json
 import typing
+from typing import Any, Dict, Optional, Type
 
 import graphql
 
@@ -31,7 +32,7 @@ class ConnectionClosed(Exception):
 
 class SubscriptionServer:
     schema: graphql.GraphQLSchema
-    connection_context_cls: AbstractConnectionContext
+    connection_context_cls: Type[AbstractConnectionContext]
 
     def __init__(self, schema, connection_context_cls):
         self.schema = schema
@@ -49,9 +50,10 @@ class SubscriptionServer:
             except ConnectionClosed:
                 break
             else:
-                connection_context.tasks.add(
-                    asyncio.ensure_future(self.on_message(connection_context, message))
+                task = asyncio.ensure_future(
+                    self.on_message(connection_context, message)
                 )
+                connection_context.tasks.add(task)
             finally:
                 connection_context.tasks = {
                     task for task in connection_context.tasks if not task.done()
@@ -102,7 +104,7 @@ class SubscriptionServer:
         op_id: str,
         execution_result: graphql.ExecutionResult,
     ) -> None:
-        result = {}
+        result: Dict[str, Any] = {}
         if execution_result.data:
             result["data"] = execution_result.data
         if execution_result.errors:
@@ -142,7 +144,7 @@ class SubscriptionServer:
     async def on_connection_init(
         self,
         connection_context: AbstractConnectionContext,
-        op_id: str,
+        op_id: Optional[str],
         payload: typing.Dict[str, typing.Any],
     ) -> None:
         try:
@@ -171,16 +173,18 @@ class SubscriptionServer:
             return
 
         if loaded.type is GQLMsgType.CONNECTION_INIT:
-            await self.on_connection_init(connection_context, loaded.id, loaded.payload)
+            await self.on_connection_init(connection_context, loaded.id, {})
 
         elif loaded.type is GQLMsgType.CONNECTION_TERMINATE:
             await self.on_connection_terminate(connection_context)
 
         elif loaded.type is GQLMsgType.START:
-            await self.on_start(connection_context, loaded.id, loaded.payload)
+            await self.on_start(
+                connection_context, loaded.id, loaded.payload,
+            )
 
         elif loaded.type is GQLMsgType.STOP:
-            await self.on_stop(connection_context, loaded.id)
+            await self.on_stop(connection_context, loaded.id or "")
 
     async def on_open(self, connection_context: AbstractConnectionContext) -> None:
         pass
@@ -207,7 +211,7 @@ class SubscriptionServer:
         if payload.has_subscription_operation:
             result = await graphql.subscribe(
                 self.schema,
-                document=payload.document,
+                document=payload.document,  # type: ignore
                 context_value=connection_context.context_value,
                 variable_values=payload.variable_values,
                 operation_name=payload.operation_name,

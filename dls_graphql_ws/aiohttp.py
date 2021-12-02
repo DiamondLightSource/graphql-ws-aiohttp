@@ -1,3 +1,5 @@
+from typing import Optional
+
 from aiohttp import WSMsgType, web
 
 from dls_graphql_ws.abc import AbstractConnectionContext
@@ -7,7 +9,7 @@ from dls_graphql_ws.server import ConnectionClosed
 class AiohttpConnectionContext(AbstractConnectionContext):
     ws: web.WebSocketResponse  # pylint: disable=C0103, invalid-name
 
-    async def receive(self) -> str:
+    async def receive(self) -> Optional[str]:
         message = await self.ws.receive()
 
         if message.type == WSMsgType.TEXT:
@@ -19,6 +21,9 @@ class AiohttpConnectionContext(AbstractConnectionContext):
             WSMsgType.ERROR,
         ]:
             raise ConnectionClosed
+
+        # If we get here then we can't handle the message
+        return None
 
     @property
     def closed(self) -> bool:

@@ -69,14 +69,16 @@ class OperationMessagePayload(collections.abc.Mapping):
     @property
     def has_subscription_operation(self) -> bool:
         document = self.document
-        if not document:
+        if document is not None:
+            return any(
+                [
+                    definition.operation  # type: ignore
+                    is graphql.OperationType.SUBSCRIPTION
+                    for definition in document.definitions
+                ]
+            )
+        else:
             return False
-        return any(
-            [
-                definition.operation is graphql.OperationType.SUBSCRIPTION
-                for definition in self.document.definitions
-            ]
-        )
 
 
 class OperationMessage:

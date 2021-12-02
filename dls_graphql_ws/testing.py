@@ -10,8 +10,8 @@ CLOSED = "__CLOSED__"
 
 class TestWebsocket:
     transport: "TestWebsocketTransport"
-    local = asyncio.Queue()
-    remote = asyncio.Queue()
+    local: asyncio.Queue = asyncio.Queue()
+    remote: asyncio.Queue = asyncio.Queue()
 
     def __init__(self, transport, local, remote):
         self.transport = transport
