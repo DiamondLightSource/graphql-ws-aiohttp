@@ -72,7 +72,8 @@ class OperationMessagePayload(collections.abc.Mapping):
         if document is not None:
             return any(
                 [
-                    definition.operation  # type: ignore
+                    isinstance(definition, OperationDefinitionNode)
+                    and definition.operation  # type: ignore
                     is graphql.OperationType.SUBSCRIPTION
                     for definition in document.definitions
                 ]
