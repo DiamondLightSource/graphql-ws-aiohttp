@@ -167,13 +167,14 @@ class SubscriptionServer:
         self, connection_context: AbstractConnectionContext, message: str
     ) -> None:
         try:
-            loaded = OperationMessage.loads(message)
+            payload = json.loads(message)
+            loaded = OperationMessage.load(payload)
         except Exception as e:  # pylint: disable=W0703, broad-except
             await self.send_error(connection_context, None, e)
             return
 
         if loaded.type is GQLMsgType.CONNECTION_INIT:
-            await self.on_connection_init(connection_context, loaded.id, {})
+            await self.on_connection_init(connection_context, loaded.id, payload)
 
         elif loaded.type is GQLMsgType.CONNECTION_TERMINATE:
             await self.on_connection_terminate(connection_context)
