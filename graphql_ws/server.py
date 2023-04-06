@@ -219,14 +219,14 @@ class SubscriptionServer:
             )
 
         if not isinstance(result, typing.AsyncIterator):
-            await self.send_execution_result(connection_context, op_id, result, false)
+            await self.send_execution_result(connection_context, op_id, result, False)
             return
 
         # agen = connection_context[op_id] = close_cancelling(result)
         connection_context[op_id] = result
         try:
             async for val in result:  # pylint: disable=E1133, not-an-iterable
-                await self.send_execution_result(connection_context, op_id, val, true)
+                await self.send_execution_result(connection_context, op_id, val, True)
         finally:
             if connection_context.get(op_id) == result:
                 del connection_context[op_id]
