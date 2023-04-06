@@ -98,10 +98,12 @@ class SubscriptionServer:
         connection_context: AbstractConnectionContext,
         op_id: str,
         execution_result: graphql.ExecutionResult,
+        has_next: bool = False
     ) -> None:
         result: Dict[str, Any] = {}
         if execution_result.data:
             result["data"] = execution_result.data
+            result["hasNext"] = has_next
         if execution_result.errors:
             result["errors"] = [
                 graphql.format_error(error) for error in execution_result.errors
@@ -217,14 +219,14 @@ class SubscriptionServer:
             )
 
         if not isinstance(result, typing.AsyncIterator):
-            await self.send_execution_result(connection_context, op_id, result)
+            await self.send_execution_result(connection_context, op_id, result, false)
             return
 
         # agen = connection_context[op_id] = close_cancelling(result)
         connection_context[op_id] = result
         try:
             async for val in result:  # pylint: disable=E1133, not-an-iterable
-                await self.send_execution_result(connection_context, op_id, val)
+                await self.send_execution_result(connection_context, op_id, val, true)
         finally:
             if connection_context.get(op_id) == result:
                 del connection_context[op_id]
