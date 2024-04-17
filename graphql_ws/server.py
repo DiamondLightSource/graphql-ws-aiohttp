@@ -106,7 +106,7 @@ class SubscriptionServer:
             result["hasNext"] = has_next
         if execution_result.errors:
             result["errors"] = [
-                graphql.format_error(error) for error in execution_result.errors
+                error.formatted for error in execution_result.errors
             ]
         return await self.send_message(
             connection_context, op_id, GQLMsgType.NEXT, result
