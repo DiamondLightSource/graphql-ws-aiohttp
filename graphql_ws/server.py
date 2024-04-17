@@ -7,6 +7,7 @@ import graphql
 
 from graphql_ws.abc import AbstractConnectionContext
 from graphql_ws.protocol import (
+    WS_ERROR_ID_ALREADY_EXISTS,
     WS_INTERNAL_ERROR,
     GQLMsgType,
     OperationMessage,
@@ -44,6 +45,9 @@ class SubscriptionServer:
 
     async def _handle(self, connection_context: AbstractConnectionContext):
         await self.on_open(connection_context)
+        # TODO: Implement a timer that will somehow kick us out of this loop if a connection_init message is not received in a certain amount of time.
+        # It could maybe start a task on the event loop and close the connection if the task is not cancelled.
+        # https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md#connection-initialisation-timeout
         while True:
             try:
                 message = await connection_context.receive()
@@ -84,35 +88,28 @@ class SubscriptionServer:
         self,
         connection_context: AbstractConnectionContext,
         op_id: typing.Optional[str],
-        error: Exception,
-        error_type: typing.Optional[GQLMsgType] = None,
+        error: Exception
     ) -> None:
-        if error_type is None:
-            error_type = GQLMsgType.ERROR
-
-        assert error_type in [GQLMsgType.CONNECTION_ERROR, GQLMsgType.ERROR], (
-            "error_type should be one of the allowed error messages "
-            "GQLMessageType.CONNECTION_ERROR or GQLMsgType.ERROR"
-        )
-
         error_payload = {"message": str(error)}
-        await self.send_message(connection_context, op_id, error_type, error_payload)
+        await self.send_message(connection_context, op_id, GQLMsgType.ERROR, error_payload)
 
     async def send_execution_result(
         self,
         connection_context: AbstractConnectionContext,
         op_id: str,
         execution_result: graphql.ExecutionResult,
+        has_next: bool = False
     ) -> None:
         result: Dict[str, Any] = {}
         if execution_result.data:
             result["data"] = execution_result.data
+            result["hasNext"] = has_next
         if execution_result.errors:
             result["errors"] = [
-                graphql.format_error(error) for error in execution_result.errors
+                error.formatted for error in execution_result.errors
             ]
         return await self.send_message(
-            connection_context, op_id, GQLMsgType.DATA, result
+            connection_context, op_id, GQLMsgType.NEXT, result
         )
 
     async def unsubscribe(
@@ -121,7 +118,7 @@ class SubscriptionServer:
         operation = connection_context.get(op_id)
         if operation:
             await operation.aclose()
-        await self.on_operation_complete(connection_context, op_id)
+            await self.on_operation_complete(connection_context, op_id)
 
     # ON methods
     async def on_close(self, connection_context: AbstractConnectionContext) -> None:
@@ -147,21 +144,16 @@ class SubscriptionServer:
         op_id: Optional[str],
         payload: typing.Dict[str, typing.Any],
     ) -> None:
+        # TODO: Likely for security reasons we're supposed to throw an error if the user tries to initialize the connection more than once at the same time.
+        # We could do this by storing an async lock in the connection request, and we wrap this whole method with the lock.
+        # https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md#connectioninit
         try:
             await self.on_connect(connection_context, payload)
             await self.send_message(
                 connection_context, None, GQLMsgType.CONNECTION_ACK, None
             )
         except Exception as exc:  # pylint: disable=W0703, broad-except
-            await self.send_error(
-                connection_context, op_id, exc, GQLMsgType.CONNECTION_ERROR
-            )
             await connection_context.close(WS_INTERNAL_ERROR)
-
-    async def on_connection_terminate(
-        self, connection_context: AbstractConnectionContext
-    ) -> None:
-        await connection_context.close(WS_INTERNAL_ERROR)
 
     async def on_message(
         self, connection_context: AbstractConnectionContext, message: str
@@ -173,18 +165,18 @@ class SubscriptionServer:
             return
 
         if loaded.type is GQLMsgType.CONNECTION_INIT:
-            await self.on_connection_init(connection_context, loaded.id, {})
+            await self.on_connection_init(connection_context, loaded.id, loaded.payload)
 
-        elif loaded.type is GQLMsgType.CONNECTION_TERMINATE:
-            await self.on_connection_terminate(connection_context)
-
-        elif loaded.type is GQLMsgType.START:
-            await self.on_start(
+        elif loaded.type is GQLMsgType.SUBSCRIBE:
+            await self.on_subscribe(
                 connection_context, loaded.id, loaded.payload,
             )
 
-        elif loaded.type is GQLMsgType.STOP:
-            await self.on_stop(connection_context, loaded.id or "")
+        elif loaded.type is GQLMsgType.COMPLETE:
+            await self.on_complete(connection_context, loaded.id or "")
+
+        elif loaded.type is GQLMsgType.PING:
+            await self.on_ping(connection_context, loaded.id, loaded.payload)
 
     async def on_open(self, connection_context: AbstractConnectionContext) -> None:
         pass
@@ -194,7 +186,7 @@ class SubscriptionServer:
     ) -> None:
         pass
 
-    async def on_start(
+    async def on_subscribe(
         self,
         connection_context: AbstractConnectionContext,
         op_id: str,
@@ -204,9 +196,10 @@ class SubscriptionServer:
         We shield the graphql executions as cancelling semi-complete executions
         can lead to inconsistent behavior (for example partial transactions)
         """
-        # If we already have a sub with this id, unsubscribe from it first
+        # If we already have a sub with this id, close the socket
         if op_id in connection_context:
-            await self.unsubscribe(connection_context, op_id)
+            await connection_context.close(WS_ERROR_ID_ALREADY_EXISTS)
+            return
 
         if payload.has_subscription_operation:
             result = await graphql.subscribe(
@@ -226,14 +219,14 @@ class SubscriptionServer:
             )
 
         if not isinstance(result, typing.AsyncIterator):
-            await self.send_execution_result(connection_context, op_id, result)
+            await self.send_execution_result(connection_context, op_id, result, False)
             return
 
         # agen = connection_context[op_id] = close_cancelling(result)
         connection_context[op_id] = result
         try:
             async for val in result:  # pylint: disable=E1133, not-an-iterable
-                await self.send_execution_result(connection_context, op_id, val)
+                await self.send_execution_result(connection_context, op_id, val, True)
         finally:
             if connection_context.get(op_id) == result:
                 del connection_context[op_id]
@@ -241,7 +234,17 @@ class SubscriptionServer:
                     connection_context, op_id, GQLMsgType.COMPLETE, None
                 )
 
-    async def on_stop(
+    async def on_complete(
         self, connection_context: AbstractConnectionContext, op_id: str
     ) -> None:
         await self.unsubscribe(connection_context, op_id)
+
+    async def on_ping(
+        self,
+        connection_context: AbstractConnectionContext,
+        op_id: Optional[str],
+        payload: typing.Dict[str, typing.Any],
+    ) -> None:
+        await self.send_message(
+            connection_context, None, GQLMsgType.PONG, None
+        )

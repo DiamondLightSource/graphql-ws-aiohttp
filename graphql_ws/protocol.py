@@ -5,25 +5,23 @@ import typing
 
 import graphql
 
+WS_ERROR_UNAUTHORIZED = 4401
+WS_ERROR_CONNECTION_INIT_TIMEOUT = 4408
+WS_ERROR_ID_ALREADY_EXISTS = 4409
+WS_ERROR_TOO_MANY_INIT_REQUESTS = 4429
 WS_INTERNAL_ERROR = 1011
-WS_PROTOCOL = "graphql-ws"
+WS_PROTOCOL = "graphql-transport-ws"
 
 
 class GQLMsgType(enum.Enum):
     CONNECTION_INIT = "connection_init"  # Client -> Server
     CONNECTION_ACK = "connection_ack"  # Server -> Client
-    CONNECTION_ERROR = "connection_error"  # Server -> Client
-
-    # NOTE: The keep alive message type does not follow the standard due to
-    # connection optimizations
-    CONNECTION_KEEP_ALIVE = "ka"  # Server -> Client
-
-    CONNECTION_TERMINATE = "connection_terminate"  # Client -> Server
-    START = "start"  # Client -> Server
-    DATA = "data"  # Server -> Client
+    PING = "ping"  # Bidirectional
+    PONG = "pong"  # Bidirectional
+    SUBSCRIBE = "subscribe"  # Client -> Server
+    NEXT = "next"  # Server -> Client
     ERROR = "error"  # Server -> Client
-    COMPLETE = "complete"  # Server -> Client
-    STOP = "stop"  # Client -> Server
+    COMPLETE = "complete"  # Bidirectional
 
 
 class OperationMessagePayload(collections.abc.Mapping):
@@ -72,7 +70,8 @@ class OperationMessagePayload(collections.abc.Mapping):
         if document is not None:
             return any(
                 [
-                    definition.operation  # type: ignore
+                    isinstance(definition, graphql.OperationDefinitionNode)
+                    and definition.operation  # type: ignore
                     is graphql.OperationType.SUBSCRIPTION
                     for definition in document.definitions
                 ]
