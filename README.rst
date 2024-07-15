@@ -10,8 +10,8 @@ This code is based on the current implementation of `subscriptions-transport-ws 
 
 ============== ==============================================================
 PyPI           ``pip install graphql-ws-aiohttp``
-Source code    https://github.com/dls-controls/graphql-ws-aiohttp
-Changelog      https://github.com/dls-controls/graphql-ws-aiohttp/blob/master/CHANGELOG.rst
+Source code    https://github.com/DiamondLightSource/graphql-ws-aiohttp
+Changelog      https://github.com/DiamondLightSource/graphql-ws-aiohttp/blob/master/CHANGELOG.rst
 ============== ==============================================================
 
 
@@ -111,12 +111,12 @@ This package is licensed under the MIT License.
 .. _`graphql-ws-next`: https://github.com/dfee/graphql-ws-next
 .. _`graphql-core v3`: https://github.com/graphql-python/graphql-core
 
-.. |code_ci| image:: https://github.com/dls-controls/graphql-ws-aiohttp/workflows/Code%20CI/badge.svg?branch=master
-    :target: https://github.com/dls-controls/graphql-ws-aiohttp/actions?query=workflow%3A%22Code+CI%22
+.. |code_ci| image:: https://github.com/DiamondLightSource/graphql-ws-aiohttp/workflows/Code%20CI/badge.svg?branch=master
+    :target: https://github.com/DiamondLightSource/graphql-ws-aiohttp/actions?query=workflow%3A%22Code+CI%22
     :alt: Code CI
 
-.. |coverage| image:: https://codecov.io/gh/dls-controls/graphql-ws-aiohttp/branch/master/graph/badge.svg
-    :target: https://codecov.io/gh/dls-controls/graphql-ws-aiohttp
+.. |coverage| image:: https://codecov.io/gh/DiamondLightSource/graphql-ws-aiohttp/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/DiamondLightSource/graphql-ws-aiohttp
     :alt: Test Coverage
 
 .. |pypi_version| image:: https://img.shields.io/pypi/v/graphql-ws-aiohttp.svg
